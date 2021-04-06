@@ -53,6 +53,8 @@ class TransactionService
         //Capture the transaction
         $transaction = self::capture($transaction);
 
+        self::notify($transaction);
+
         return $transaction;
     }
 
@@ -115,5 +117,33 @@ class TransactionService
         //Update the transaction status
         $transaction->status = 'canceled';
         $transaction->save();
+    }
+
+    /**
+     * Notify transaction payee function
+     *
+     * @param Transaction $transaction
+     * @return boolean
+     */
+    public static function notify(Transaction $transaction): bool
+    {
+        $payee = User::find($transaction->payee);
+
+        try{
+            //Returns from mocky to simulate transaction notification
+            $response = Http::get('https://run.mocky.io/v3/b19f7b9f-9cbf-4fc6-ad22-dc30601aec04');
+            $data = $response->json();
+
+            //Mocky based conditional to check if transaction is valid
+            if ($data['message'] == "Enviado") {
+                return true;
+            }
+
+        } catch(Exception $e) {
+            //Add request error o logfile
+            error_log("Capture transaction HTTP error: ". $e->getMessage());
+        }
+
+        return false;
     }
 }
